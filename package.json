@@ -1,0 +1,24 @@
+{
+  "name": "com.realdream.common",
+  "version": "0.0.1",
+  "unity": "2022.2",
+  "displayName": "RealDream.Common",
+  "description": "RealDream's common lib for untiy.",
+  "keywords": [
+    "common"
+  ],
+  "category": "common",
+  "dependencies": {
+  },
+  "relatedPackages": {
+  },
+  "_upm": {
+    "changelog": ""
+  },
+  "documentationUrl": "https://github.com/realdream-ai/rdx.common.unity/",
+  "repository": {
+    "url": "https://github.com/realdream-ai/rdx.common.unity.git",
+    "type": "git",
+    "revision": "be60dd1716d39b00d03d87668a09a4fc1d4102b6"
+  }
+}

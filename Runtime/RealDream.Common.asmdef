@@ -1,0 +1,16 @@
+{
+    "name": "RealDream.Common",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a9e3bc73c61f9cd4f8b4dcdd393a5698"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
