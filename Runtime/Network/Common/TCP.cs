@@ -19,7 +19,6 @@ public class TCP
     private string ip ;
     private int port ;
     private Action<int> disconnectAction;
-    public int Type;
     public int id;
     public TCP()
     {
