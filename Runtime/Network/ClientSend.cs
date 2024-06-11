@@ -8,7 +8,7 @@ namespace RealDream.Network
 {
     public class ClientSend 
     {
-        private static void SendTCPData(Packet packet)
+        public static void SendTCPData(Packet packet)
         {
             packet.WriteLength();
             NetClient.instance.tcp.SendData(packet);
