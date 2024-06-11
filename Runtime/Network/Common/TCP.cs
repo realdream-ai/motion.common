@@ -1,185 +1,156 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 
-namespace RealDream.Network;
+namespace RealDream.Network {
+	public class TCP {
+		public delegate void PacketHandler(int id, Packet packet);
 
-public class TCP
-{
-    public delegate void PacketHandler(int id, Packet packet);
+		public Dictionary<int, PacketHandler> packetHandlers;
+		public TcpClient socket;
 
-    public Dictionary<int, PacketHandler> packetHandlers;
-    public TcpClient socket;
+		private NetworkStream stream;
+		private Packet receivedData;
+		private byte[] receiveBuffer;
 
-    private NetworkStream stream;
-    private Packet receivedData;
-    private byte[] receiveBuffer;
+		public static int dataBufferSize = 65536;
 
-    public static int dataBufferSize = 65536;
+		private string ip;
+		private int port;
+		private Action<int> disconnectAction;
+		public int id;
+		public TCP() { packetHandlers = new Dictionary<int, TCP.PacketHandler>(); }
+		public TCP(int id) { this.id = id; }
 
-    private string ip ;
-    private int port ;
-    private Action<int> disconnectAction;
-    public int id;
-    public TCP()
-    {
-        packetHandlers = new Dictionary<int, TCP.PacketHandler>();
-    }
-    public TCP(int id)
-    {
-        this.id = id;
-    }
-    public void Connect(TcpClient _socket,Action<int> disconnectAction)
-    {
-        this.disconnectAction = disconnectAction;
-        socket = _socket;
-        socket.ReceiveBufferSize = dataBufferSize;
-        socket.SendBufferSize = dataBufferSize;
+		public void Connect(TcpClient _socket, Action<int> disconnectAction) {
+			this.disconnectAction = disconnectAction;
+			socket = _socket;
+			socket.ReceiveBufferSize = dataBufferSize;
+			socket.SendBufferSize = dataBufferSize;
 
-        stream = socket.GetStream();
+			stream = socket.GetStream();
 
-        receivedData = new Packet();
-        receiveBuffer = new byte[dataBufferSize];
+			receivedData = new Packet();
+			receiveBuffer = new byte[dataBufferSize];
 
-        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-    }
-    
-    /// <summary>Attempts to connect to the server via TCP.</summary>
-    public void Connect(string ip, int port, Action<int> disconnectAction)
-    {
-        this.disconnectAction = disconnectAction;
-        this.ip = ip;
-        this.port = port;
-        var ipAddress = IPAddress.Parse(ip);
-        socket = new TcpClient(ipAddress.AddressFamily);
-        socket.ReceiveBufferSize = dataBufferSize;
-        socket.SendBufferSize = dataBufferSize;
-        receiveBuffer = new byte[dataBufferSize];
-        MsgUtil.Log($"instance {ip}  port={port}");
-        socket.BeginConnect(ip, port, ConnectCallback, socket);
-    }
+			stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+		}
 
-    /// <summary>Initializes the newly connected client's TCP-related info.</summary>
-    private void ConnectCallback(IAsyncResult _result)
-    {
-        socket.EndConnect(_result);
+		/// <summary>Attempts to connect to the server via TCP.</summary>
+		public void Connect(string ip, int port, Action<int> disconnectAction) {
+			this.disconnectAction = disconnectAction;
+			this.ip = ip;
+			this.port = port;
+			var ipAddress = IPAddress.Parse(ip);
+			socket = new TcpClient(ipAddress.AddressFamily);
+			socket.ReceiveBufferSize = dataBufferSize;
+			socket.SendBufferSize = dataBufferSize;
+			receiveBuffer = new byte[dataBufferSize];
+			MsgUtil.Log($"instance {ip}  port={port}");
+			socket.BeginConnect(ip, port, ConnectCallback, socket);
+		}
 
-        if (!socket.Connected)
-        {
-            return;
-        }
+		/// <summary>Initializes the newly connected client's TCP-related info.</summary>
+		private void ConnectCallback(IAsyncResult _result) {
+			socket.EndConnect(_result);
 
-        stream = socket.GetStream();
+			if (!socket.Connected) {
+				return;
+			}
 
-        receivedData = new Packet();
+			stream = socket.GetStream();
 
-        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-        MsgUtil.Log($"Connect server {ip}:{port}");
-    }
+			receivedData = new Packet();
 
-    /// <summary>Sends data to the client via TCP.</summary>
-    /// <param name="packet">The packet to send.</param>
-    public void SendData(Packet packet)
-    {
-        try
-        {
-            if (socket != null)
-            {
-                MsgUtil.LogBytes(packet.ToArray());
-                stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
-            }
-        }
-        catch (Exception _ex)
-        {
-            MsgUtil.LogError($"Error sending data to server via TCP: {_ex}");
-        }
-    }
+			stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+			MsgUtil.Log($"Connect server {ip}:{port}");
+		}
 
-    /// <summary>Reads incoming data from the stream.</summary>
-    private void ReceiveCallback(IAsyncResult _result)
-    {
-        try
-        {
-            int _byteLength = stream.EndRead(_result);
-            if (_byteLength <= 0)
-            {
-                disconnectAction?.Invoke(id);
-                return;
-            }
+		/// <summary>Sends data to the client via TCP.</summary>
+		/// <param name="packet">The packet to send.</param>
+		public void SendData(Packet packet) {
+			try {
+				if (socket != null) {
+					MsgUtil.LogBytes(packet.ToArray());
+					stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
+				}
+			} catch (Exception _ex) {
+				MsgUtil.LogError($"Error sending data to server via TCP: {_ex}");
+			}
+		}
 
-            byte[] _data = new byte[_byteLength];
-            Array.Copy(receiveBuffer, _data, _byteLength);
+		/// <summary>Reads incoming data from the stream.</summary>
+		private void ReceiveCallback(IAsyncResult _result) {
+			try {
+				int _byteLength = stream.EndRead(_result);
+				if (_byteLength <= 0) {
+					disconnectAction?.Invoke(id);
+					return;
+				}
 
-            receivedData.Reset(HandleData(_data)); // Reset receivedData if all data was handled
-            stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
-        }
-        catch(Exception _ex)
-        {
-            disconnectAction?.Invoke(id);
-        }
-    }
+				byte[] _data = new byte[_byteLength];
+				Array.Copy(receiveBuffer, _data, _byteLength);
 
-    /// <summary>Prepares received data to be used by the appropriate packet handler methods.</summary>
-    /// <param name="_data">The recieved data.</param>
-    private bool HandleData(byte[] _data)
-    {
-        int packetLength = 0;
+				receivedData.Reset(HandleData(_data)); // Reset receivedData if all data was handled
+				stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+			} catch (Exception _ex) {
+				disconnectAction?.Invoke(id);
+			}
+		}
 
-        receivedData.SetBytes(_data);
-        MsgUtil.LogBytes(_data);
+		/// <summary>Prepares received data to be used by the appropriate packet handler methods.</summary>
+		/// <param name="_data">The recieved data.</param>
+		private bool HandleData(byte[] _data) {
+			int packetLength = 0;
 
-        if (receivedData.UnreadLength() >= 4)
-        {
-            // If client's received data contains a packet
-            packetLength = receivedData.ReadInt();
-            if (packetLength <= 0)
-            {
-                // If packet contains no data
-                return true; // Reset receivedData instance to allow it to be reused
-            }
-        }
+			receivedData.SetBytes(_data);
+			MsgUtil.LogBytes(_data);
 
-        while (packetLength > 0 && packetLength <= receivedData.UnreadLength())
-        {
-            // While packet contains data AND packet data length doesn't exceed the length of the packet we're reading
-            byte[] packetBytes = receivedData.ReadBytes(packetLength);
-            ThreadManager.ExecuteOnMainThread(() =>
-            {
-                using (Packet packet = new Packet(packetBytes))
-                {
-                    int packetId = packet.ReadInt();
-                    packetHandlers[packetId](id,packet); // Call appropriate method to handle the packet
-                }
-            });
+			if (receivedData.UnreadLength() >= 4) {
+				// If client's received data contains a packet
+				packetLength = receivedData.ReadInt();
+				if (packetLength <= 0) {
+					// If packet contains no data
+					return true; // Reset receivedData instance to allow it to be reused
+				}
+			}
 
-            packetLength = 0; // Reset packet length
-            if (receivedData.UnreadLength() >= 4)
-            {
-                // If client's received data contains another packet
-                packetLength = receivedData.ReadInt();
-                if (packetLength <= 0)
-                {
-                    // If packet contains no data
-                    return true; // Reset receivedData instance to allow it to be reused
-                }
-            }
-        }
+			while (packetLength > 0 && packetLength <= receivedData.UnreadLength()) {
+				// While packet contains data AND packet data length doesn't exceed the length of the packet we're reading
+				byte[] packetBytes = receivedData.ReadBytes(packetLength);
+				ThreadManager.ExecuteOnMainThread(() => {
+					using (Packet packet = new Packet(packetBytes)) {
+						int packetId = packet.ReadInt();
+						packetHandlers[packetId](id, packet); // Call appropriate method to handle the packet
+					}
+				});
 
-        if (packetLength <= 1)
-        {
-            return true; // Reset receivedData instance to allow it to be reused
-        }
+				packetLength = 0; // Reset packet length
+				if (receivedData.UnreadLength() >= 4) {
+					// If client's received data contains another packet
+					packetLength = receivedData.ReadInt();
+					if (packetLength <= 0) {
+						// If packet contains no data
+						return true; // Reset receivedData instance to allow it to be reused
+					}
+				}
+			}
 
-        return false;
-    }
+			if (packetLength <= 1) {
+				return true; // Reset receivedData instance to allow it to be reused
+			}
 
-    /// <summary>Disconnects from the server and cleans up the TCP connection.</summary>
-    public void Disconnect()
-    {
-        disconnectAction = null;
-        stream = null;
-        receivedData = null;
-        receiveBuffer = null;
-        socket = null;
-    }
+			return false;
+		}
 
+		/// <summary>Disconnects from the server and cleans up the TCP connection.</summary>
+		public void Disconnect() {
+			disconnectAction = null;
+			stream = null;
+			receivedData = null;
+			receiveBuffer = null;
+			socket = null;
+		}
+	}
 }
