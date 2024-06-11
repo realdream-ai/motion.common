@@ -3,9 +3,11 @@ namespace RealDream.Network
         
     public enum EServiceType
     {
-        Drawing = 1,
-        Mocap = 2,
-        Rigging = 3,
+        Nothing = 0,
+        Client = 1,
+        Drawing = 2,
+        Mocap = 3,
+        Rigging = 4,
     }
     public enum EMsgDefine
     {
