@@ -64,7 +64,7 @@ namespace RealDream.Network
         }
 
         /// <summary>Disconnects from the server and stops all network traffic.</summary>
-        private void Disconnect(int id = 0)
+        public void Disconnect(int id = 0)
         {
             if (isConnected)
             {
