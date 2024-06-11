@@ -10,5 +10,6 @@ namespace RealDream
         OnServerProgress = 306,
         OnServerResult = 307,
         OnServerRequest = 308,
+        OnServerResService = 310,
     }
 }

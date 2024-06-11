@@ -42,9 +42,7 @@ namespace RealDream.Network
         public void Start(Type type = null)
         {
             tcp = new TCP();
-            RegisterPacketHandlers(typeof(ClientHandle));
-            if (type != null)
-                RegisterPacketHandlers(type);
+            MsgUtil.RegisterPacketHandlers(typeof(ClientHandle), tcp.packetHandlers);
             isConnected = true;
             tcp.Connect(ip, port, Disconnect); // Connect tcp, udp gets connected once tcp is done
         }
@@ -65,16 +63,8 @@ namespace RealDream.Network
             Disconnect(); // Disconnect when the game is closed
         }
 
-
-
-        /// <summary>Initializes all necessary client data.</summary>
-        public void RegisterPacketHandlers(Type type)
-        {
-            MsgUtil.RegisterPacketHandlers(type, tcp.packetHandlers);
-        }
-
         /// <summary>Disconnects from the server and stops all network traffic.</summary>
-        private void Disconnect()
+        private void Disconnect(int id = 0)
         {
             if (isConnected)
             {

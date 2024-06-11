@@ -5,11 +5,17 @@ using System.Text;
 
 namespace RealDream.Network
 {
-    public delegate void PacketHandler(int _fromClient, Packet packet);
-
     public class MsgUtil
     {
         public static bool IsDebugMode;
+        public static void LogError(string msg)
+        {
+#if UNITY_5_3_OR_NEWER
+            UnityEngine.Debug.LogError(msg);
+#else
+            Console.WriteLine("[ERROR]=== " + msg);
+#endif
+        }
         public static void Log(string msg)
         {
 #if UNITY_5_3_OR_NEWER 

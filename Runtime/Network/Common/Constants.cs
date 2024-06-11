@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace RealDream.Network
+﻿namespace RealDream.Network
 {
     class Constants
     {
@@ -13,4 +9,5 @@ namespace RealDream.Network
 
         public static int ServerPort = 26950;
     }
+
 }

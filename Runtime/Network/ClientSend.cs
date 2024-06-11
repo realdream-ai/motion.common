@@ -29,12 +29,38 @@ namespace RealDream.Network
         {
             EventUtil.Trigger(EGameEvent.OnServerProgress, new List<object>() { fileName, progress });
         }
-
+   
         public static void OnRecvResult(string fileName, string hash, byte[] bytes, int selectIdx)
         {
             EventUtil.Trigger(EGameEvent.OnServerResult, new List<object>() { fileName,bytes, hash });
         }
+        public static void OnResService(string fileName,  byte[] bytes)
+        {
+            EventUtil.Trigger(EGameEvent.OnServerResService, new List<object>() { fileName,bytes });
+        }
 
+        private static int GlobalServiceId;
+
+        public static int GetGlobalServiceId()
+        {
+            return GlobalServiceId++;
+        }
+        
+        public static void ReqService(EServiceType serverType,string filePath,string prefix = "")
+        {
+            using (Packet packet = new Packet((int)EMsgDefine.C2S_ReqService))
+            {
+                var hash = HashUtil.CalcHash(filePath);
+                var bytes = File.ReadAllBytes(filePath);
+                packet.Write((int)serverType);
+                packet.Write(prefix + Path.GetFileName(filePath));
+                packet.Write(hash);
+                packet.Write(bytes.Length);
+                packet.Write(bytes);
+                SendTCPData(packet);
+            }
+        }
+        
         public static void UpdateLoadFile(string filePath,  int idx)
         {
             using (Packet packet = new Packet((int)EMsgDefine.C2S_UploadFile))
@@ -42,7 +68,7 @@ namespace RealDream.Network
                 var hash = HashUtil.CalcHash(filePath);
                 var bytes = File.ReadAllBytes(filePath);
                 packet.Write(Path.GetFileName(filePath));
-                packet.Write(Path.GetFileName(hash));
+                packet.Write(hash);
                 packet.Write(idx);
                 packet.Write(bytes.Length);
                 packet.Write(bytes);

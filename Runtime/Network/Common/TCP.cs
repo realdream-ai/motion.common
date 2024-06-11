@@ -5,7 +5,7 @@ namespace RealDream.Network;
 
 public class TCP
 {
-    public delegate void PacketHandler(Packet packet);
+    public delegate void PacketHandler(int id, Packet packet);
 
     public Dictionary<int, PacketHandler> packetHandlers;
     public TcpClient socket;
@@ -18,14 +18,34 @@ public class TCP
 
     private string ip ;
     private int port ;
-    private Action disconnectAction;
+    private Action<int> disconnectAction;
+    public int Type;
+    public int id;
     public TCP()
     {
         packetHandlers = new Dictionary<int, TCP.PacketHandler>();
     }
+    public TCP(int id)
+    {
+        this.id = id;
+    }
+    public void Connect(TcpClient _socket,Action<int> disconnectAction)
+    {
+        this.disconnectAction = disconnectAction;
+        socket = _socket;
+        socket.ReceiveBufferSize = dataBufferSize;
+        socket.SendBufferSize = dataBufferSize;
+
+        stream = socket.GetStream();
+
+        receivedData = new Packet();
+        receiveBuffer = new byte[dataBufferSize];
+
+        stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
+    }
     
     /// <summary>Attempts to connect to the server via TCP.</summary>
-    public void Connect(string ip, int port, Action disconnectAction)
+    public void Connect(string ip, int port, Action<int> disconnectAction)
     {
         this.disconnectAction = disconnectAction;
         this.ip = ip;
@@ -71,7 +91,7 @@ public class TCP
         }
         catch (Exception _ex)
         {
-            Debug.Log($"Error sending data to server via TCP: {_ex}");
+            MsgUtil.LogError($"Error sending data to server via TCP: {_ex}");
         }
     }
 
@@ -83,7 +103,7 @@ public class TCP
             int _byteLength = stream.EndRead(_result);
             if (_byteLength <= 0)
             {
-                disconnectAction?.Invoke();
+                disconnectAction?.Invoke(id);
                 return;
             }
 
@@ -93,9 +113,9 @@ public class TCP
             receivedData.Reset(HandleData(_data)); // Reset receivedData if all data was handled
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
         }
-        catch
+        catch(Exception _ex)
         {
-            Disconnect();
+            disconnectAction?.Invoke(id);
         }
     }
 
@@ -128,7 +148,7 @@ public class TCP
                 using (Packet packet = new Packet(packetBytes))
                 {
                     int packetId = packet.ReadInt();
-                    packetHandlers[packetId](packet); // Call appropriate method to handle the packet
+                    packetHandlers[packetId](id,packet); // Call appropriate method to handle the packet
                 }
             });
 
@@ -154,9 +174,9 @@ public class TCP
     }
 
     /// <summary>Disconnects from the server and cleans up the TCP connection.</summary>
-    private void Disconnect()
+    public void Disconnect()
     {
-        disconnectAction?.Invoke();
+        disconnectAction = null;
         stream = null;
         receivedData = null;
         receiveBuffer = null;
