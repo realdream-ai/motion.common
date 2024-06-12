@@ -7,7 +7,7 @@ namespace RealDream.Network
 {
     public class MsgUtil
     {
-        public static bool IsDebugMode = true;
+        public static bool IsDebugMode = false;
         public static void LogError(string msg)
         {
 #if UNITY_5_3_OR_NEWER

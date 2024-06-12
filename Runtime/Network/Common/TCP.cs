@@ -109,7 +109,6 @@ namespace RealDream.Network
         {
             try
             {
-                MsgUtil.Log("IsCompleted " + _result.IsCompleted);
                 int len = stream.EndRead(_result);
                 if (len <= 0)
                 {
