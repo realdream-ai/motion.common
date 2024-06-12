@@ -22,7 +22,7 @@ namespace RealDream.Network
         private int port;
         private Action<int> disconnectAction;
         public int id;
-
+        public bool isSendSync;
         public TCP()
         {
             packetHandlers = new Dictionary<int, TCP.PacketHandler>();
@@ -56,6 +56,7 @@ namespace RealDream.Network
             var ipAddress = IPAddress.Parse(ip);
             socket = new TcpClient(ipAddress.AddressFamily);
             socket.BeginConnect(ip, port, ConnectCallback, socket);
+            isSendSync = true;
         }
 
         /// <summary>Initializes the newly connected client's TCP-related info.</summary>
@@ -90,7 +91,14 @@ namespace RealDream.Network
                 if (socket != null)
                 {
                     MsgUtil.LogBytes(packet.ToArray());
-                    stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
+                    if (isSendSync)
+                    {
+                        stream.Write(packet.ToArray(), 0, packet.Length());
+                    }
+                    else
+                    {
+                        stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
+                    }
                 }
                 else
                 {
