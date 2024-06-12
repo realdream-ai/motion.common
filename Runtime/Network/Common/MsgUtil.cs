@@ -19,7 +19,7 @@ namespace RealDream.Network
         public static void Log(string msg)
         {
 #if UNITY_5_3_OR_NEWER 
-            //UnityEngine.Debug.Log(msg);
+            UnityEngine.Debug.Log(msg);
 #else
             Console.WriteLine(msg);
 #endif
