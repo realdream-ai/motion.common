@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 
@@ -87,6 +88,10 @@ public class TCP
                 MsgUtil.LogBytes(packet.ToArray());
                 stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
             }
+            else
+            {
+                MsgUtil.LogError("Socket null");
+            }
         }
         catch (Exception _ex)
         {
@@ -109,6 +114,7 @@ public class TCP
             byte[] _data = new byte[_byteLength];
             Array.Copy(receiveBuffer, _data, _byteLength);
 
+            MsgUtil.LogBytes(_data);
             receivedData.Reset(HandleData(_data)); // Reset receivedData if all data was handled
             stream.BeginRead(receiveBuffer, 0, dataBufferSize, ReceiveCallback, null);
         }

@@ -7,7 +7,7 @@ namespace RealDream.Network
 {
     public class MsgUtil
     {
-        public static bool IsDebugMode;
+        public static bool IsDebugMode = true;
         public static void LogError(string msg)
         {
 #if UNITY_5_3_OR_NEWER
@@ -29,7 +29,8 @@ namespace RealDream.Network
         {
             if (IsDebugMode)
             {
-                Log(BitConverter.ToString(byteArray).Replace("-", " "));
+                Log("LogBytes len ="+byteArray.Length);
+                //Log(BitConverter.ToString(byteArray).Replace("-", " "));
             }
             else
             {
