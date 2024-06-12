@@ -9,6 +9,18 @@ namespace RealDream.Network
         Mocap = 3,
         Rigging = 4,
     }
+    
+    public enum EDrawingServiceType
+    {
+        Nothing = 0,
+        BoundingBox = 1,
+        Segment = 2,
+        KeyPoint = 3,
+        Retarget = 4,
+        AllButRetarget = 5,
+        All = 6,
+    }
+    
     public enum EMsgDefine
     {
         S2C_Hello = 101,

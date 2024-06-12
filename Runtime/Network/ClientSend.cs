@@ -46,13 +46,14 @@ namespace RealDream.Network
             return GlobalServiceId++;
         }
         
-        public static void ReqService(EServiceType serverType,string filePath,string prefix = "")
+        public static void ReqService(EServiceType serverType,int msgType, string filePath,string prefix = "")
         {
             using (Packet packet = new Packet((int)EMsgDefine.C2S_ReqService))
             {
                 var hash = HashUtil.CalcHash(filePath);
                 var bytes = File.ReadAllBytes(filePath);
                 packet.Write((int)serverType);
+                packet.Write((int)msgType);
                 packet.Write(prefix + Path.GetFileName(filePath));
                 packet.Write(hash);
                 packet.Write(bytes.Length);
