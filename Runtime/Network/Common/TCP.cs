@@ -91,14 +91,7 @@ namespace RealDream.Network
                 if (socket != null)
                 {
                     MsgUtil.LogBytes(packet.ToArray());
-                    if (isSendSync)
-                    {
-                        stream.Write(packet.ToArray(), 0, packet.Length());
-                    }
-                    else
-                    {
-                        stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
-                    }
+                    stream.BeginWrite(packet.ToArray(), 0, packet.Length(), null, null); // Send data to server
                 }
                 else
                 {
