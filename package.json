@@ -1,6 +1,6 @@
 {
   "name": "com.realdream.common",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "unity": "2022.2",
   "displayName": "RealDream.Common",
   "description": "RealDream's common lib for untiy.",
